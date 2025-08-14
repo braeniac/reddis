@@ -6,6 +6,26 @@
 #include <netinet/in.h>  // For sockaddr_in
 #include <arpa/inet.h>   // For inet_addr(), htons()
 
+void msg(const char *msg) {
+   fprintf(stderr, "%s\n", msg);
+}
+
+static void doSomething(int connfd) {
+
+    //read & write 
+    char rbuf[64] = {};
+    ssize_t n = read(connfd, rbuf, sizeof(rbuf) - 1 ); 
+    if (n < 0) {
+        msg("read() error"); 
+        return; 
+    }
+
+    printf("client says: %s\n", rbuf);
+
+    char wbuf[] = "World!";
+    write(connfd, wbuf, strlen(wbuf));
+}
+
 void die(const char *msg) {
     int err = errno; 
     fprintf(stderr, "[%d] %s\n", err, msg);
@@ -53,7 +73,11 @@ int main() {
         struct sockaddr_in client_addr = {}; 
         socklen_t addrlen = sizeof(client_addr);
         int connfd = accept(fd, (struct sockaddr *)&client_addr, &addrlen);
-
+        if (connfd < 0) {
+            continue;
+        }
+        doSomething(connfd); 
+        close(connfd); 
     }
 
     return 0; 
